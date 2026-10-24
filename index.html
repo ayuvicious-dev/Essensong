@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Essensong</title>
+<script>try{var t=localStorage.getItem("essensong-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#9b7fe0">
 <meta name="mobile-web-app-capable" content="yes">
@@ -12,8 +13,9 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
-:root{--ink:#2a1f45;--sub:#7d7099;--vio:#9b7fe0;--vio2:#7f5fd0;--lav:#d9c9f5;--mist:#f6f2fd;--card:#fff;--line:#e6dcf7;--bad:#c0392b}
-@media(prefers-color-scheme:dark){:root{--ink:#efe9fb;--sub:#a79cc4;--lav:#4a3a78;--mist:#17112b;--card:#221a3d;--line:#352a58}}
+:root{color-scheme:light;--ink:#2a1f45;--sub:#7d7099;--vio:#9b7fe0;--vio2:#7f5fd0;--lav:#d9c9f5;--mist:#f6f2fd;--card:#fff;--line:#e6dcf7;--bad:#c0392b}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--ink:#efe9fb;--sub:#a79cc4;--lav:#4a3a78;--mist:#17112b;--card:#221a3d;--line:#352a58}}
+:root[data-theme=dark]{color-scheme:dark;--ink:#efe9fb;--sub:#a79cc4;--lav:#4a3a78;--mist:#17112b;--card:#221a3d;--line:#352a58}
 *{box-sizing:border-box;margin:0}
 html,body{height:100%}
 body{font-family:ui-rounded,"Segoe UI",system-ui,sans-serif;background:var(--mist);color:var(--ink);-webkit-tap-highlight-color:transparent}
@@ -96,7 +98,7 @@ input[type=range]{flex:1;accent-color:var(--vio)}
 #pl .art,#pl .cl{display:none}
 #pl .cl{color:var(--ink)}
 #pl.full{position:fixed;inset:0;z-index:7;border:0;border-radius:0;box-shadow:none;background:var(--mist);padding:calc(env(safe-area-inset-top,0px) + 56px) 28px calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;flex-direction:column;justify-content:center;gap:6px;touch-action:auto}
-#pl.full .art{display:block;width:min(72vw,300px);aspect-ratio:1;object-fit:cover;border-radius:32px;margin:0 auto 22px;box-shadow:0 18px 50px rgba(127,95,208,.35)}
+#pl.full .art{display:block;width:min(72vw,300px);aspect-ratio:1;object-fit:contain;margin:0 auto 22px;filter:drop-shadow(0 14px 28px rgba(127,95,208,.35))}
 #pl.full .cl{display:grid;position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:14px}
 #pl.full .n{font-size:1.4rem;white-space:normal}
 #pl.full .ar{font-size:1rem;margin-bottom:14px}
@@ -108,11 +110,22 @@ input[type=range]{flex:1;accent-color:var(--vio)}
 @keyframes eg{from{box-shadow:-2px 2px 12px rgba(0,0,0,.25)}to{box-shadow:-2px 2px 18px 2px rgba(155,127,224,.8)}}
 @media(prefers-reduced-motion:reduce){#edge.playing{animation:none}#pl{transition:none}}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translateX(-50%);background:var(--ink);color:var(--mist);padding:10px 16px;border-radius:12px;font-size:.88rem;max-width:90%;z-index:9}
+.sx{padding:12px;border-radius:16px;background:var(--mist);margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+.st{font-weight:700;font-size:.78rem;color:var(--sub);text-transform:uppercase;letter-spacing:.05em}
+.sr{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.9rem}.sr b{color:var(--vio2);font-size:1.05rem}
+.pg{height:10px;border-radius:99px;background:var(--lav);overflow:hidden}
+.pg i{display:block;height:100%;width:0;border-radius:99px;background:var(--vio);transition:width .25s}
+#sheet .sx .btn{margin-top:0}
+#sheet .seg{display:flex;gap:6px}
+#sheet .seg button{flex:1;text-align:center;border:1.5px solid var(--line);background:var(--card);padding:11px 6px}
+#sheet .seg button.on{background:var(--vio);border-color:var(--vio);color:#fff;font-weight:700}
+.ab{display:flex;justify-content:space-between;gap:12px;font-size:.92rem}.ab span{color:var(--sub);white-space:nowrap}.ab b{font-weight:600;text-align:right}
+#sheet .sx .lo{text-align:center;font-weight:600;border:1.5px solid var(--line);background:var(--card)}
 </style>
 </head>
 <body>
 <section id="auth" class="hide">
-  <img src="icons/icon-512.png" alt="Essensong">
+  <img src="icons/logo.png" alt="Essensong">
   <h1>Essensong</h1>
   <p class="s">Masuk untuk memutar musikmu di semua device.</p>
   <div class="f">
@@ -128,11 +141,11 @@ input[type=range]{flex:1;accent-color:var(--vio)}
 
 <section id="app" class="hide">
   <header>
-    <img src="icons/icon-192.png" alt="">
+    <img src="icons/logo.png" alt="">
     <h1>Essensong</h1>
     <span class="chip hide" id="off">Offline</span>
+    <button class="ic" id="set" aria-label="Pengaturan" title="Pengaturan"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
     <button class="ic" id="home" aria-label="Beranda" title="Beranda"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button>
-    <button class="ic" id="out" aria-label="Keluar" title="Keluar"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
   </header>
   <div class="bar">
     <input class="search" id="q" type="search" placeholder="Cari lagu atau artis">
@@ -141,7 +154,7 @@ input[type=range]{flex:1;accent-color:var(--vio)}
   <div id="list"></div>
   <div id="pl">
     <button class="ic cl" id="cl" aria-label="Tutup layar penuh"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
-    <img class="art" src="icons/icon-512.png" alt="">
+    <img class="art" src="icons/logo.png" alt="">
     <div class="n" id="tn">Belum ada lagu diputar</div>
     <div class="ar" id="ta"></div>
     <div class="sk"><span id="cu">0:00</span><input type="range" id="sk" min="0" max="0" value="0" step="1" aria-label="Posisi lagu"><span id="du">0:00</span></div>
@@ -174,7 +187,7 @@ import{initializeFirestore,persistentLocalCache,persistentMultipleTabManager,col
 const app=initializeApp({apiKey:"AIzaSyDcAvj4D9-fmVX5IT-2oH7grH6TiUaHvSQ",authDomain:"essensong.firebaseapp.com",projectId:"essensong",storageBucket:"essensong.firebasestorage.app",messagingSenderId:"643349788822",appId:"1:643349788822:web:5615a9c04699ffe29eaab7"});
 const auth=getAuth(app),db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
 const $=s=>document.querySelector(s),au=$("#au");
-let uid=null,unsub=null,songs=[],view=[],queue=[],cur=null,cached=new Set(),busy=new Set(),shuf=false,rep=0,objUrl=null,urls={},ready=false,lerr="",CH=900000,tab="",plOpen=null,pls=[],ctx=null,importTo=null;
+let uid=null,unsub=null,songs=[],view=[],queue=[],cur=null,cached=new Set(),busy=new Set(),shuf=false,rep=0,objUrl=null,urls={},ready=false,lerr="",CH=900000,tab="",plOpen=null,pls=[],ctx=null,importTo=null,dl={on:false,stop:false,cur:0,n:0,fail:0,part:0};
 
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));
 
@@ -201,11 +214,10 @@ $("#bin").onclick=()=>run(()=>signInWithEmailAndPassword(...cred()));
 $("#bup").onclick=()=>run(()=>createUserWithEmailAndPassword(...cred()));
 $("#bgo").onclick=()=>run(()=>signInWithPopup(auth,new GoogleAuthProvider()));
 $("#brs").onclick=()=>run(async()=>{const e=$("#em").value.trim();if(!e)return err("Isi email dulu, lalu tekan Lupa kata sandi.");await sendPasswordResetEmail(auth,e);err("Link reset dikirim ke email kamu.")});
-$("#out").onclick=()=>signOut(auth);
 
 onAuthStateChanged(auth,async u=>{
   if(unsub){unsub();unsub=null}
-  if(!u){uid=null;au.pause();au.removeAttribute("src");cur=null;songs=[];setPS("panel");$("#auth").classList.remove("hide");$("#app").classList.add("hide");return}
+  if(!u){dl.stop=true;$("#sheet").classList.add("hide");uid=null;au.pause();au.removeAttribute("src");cur=null;songs=[];setPS("panel");$("#auth").classList.remove("hide");$("#app").classList.add("hide");return}
   uid=u.uid;ready=false;lerr="";tab="home";plOpen=null;pls=[];$("#auth").classList.add("hide");$("#app").classList.remove("hide");
   await loadCached();render();
   const u1=onSnapshot(query(collection(db,"users",uid,"songs"),orderBy("createdAt","desc")),s=>{songs=s.docs.map(d=>({id:d.id,...d.data()}));ready=true;lerr="";render()},e=>{ready=true;lerr=e.code;render()});
@@ -247,7 +259,7 @@ function render(){
     h=`<div class="sec">${p?`<button class="ic" data-a="back" aria-label="Kembali">${ICO.bk}</button>`:""}<b>${p?esc(p.name):TT[tab]}</b><span>${view.length} lagu</span></div>`+(p?`<button class="btn o" data-a="addsongs" style="width:100%;margin-bottom:8px">+ Tambah lagu</button>`:"")+
       (view.length?view.map(rowH).join("")+(tab==="home"?`<button class="btn o" data-a="all" style="width:100%;margin-top:8px">Lihat semua lagu (${songs.length})</button>`:""):`<div class="empty">${lerr?"Gagal memuat perpustakaan ("+lerr+").<br>Cek rules Firestore sudah di-publish, lalu muat ulang halaman.":!ready?"Memuat perpustakaan…":$("#q").value?"Tidak ada lagu yang cocok.":EM[plOpen?"pl":tab]}</div>`);
   }
-  $("#list").innerHTML=h;
+  $("#list").innerHTML=h;setUI();
 }
 $("#list").onclick=e=>{
   const b=e.target.closest("button[data-a]");if(!b)return;const a=b.dataset.a,row=b.closest(".row");
@@ -310,6 +322,10 @@ $("#sheet").onclick=e=>{
   if(e.target.id==="sheet")return $("#sheet").classList.add("hide");
   const b=e.target.closest("button[data-s]");if(!b)return;const k=b.dataset.s,s=ctx;
   if(k==="cancel")return $("#sheet").classList.add("hide");
+  if(k==="th")return setTheme(b.dataset.v);
+  if(k==="dlall")return void dlAll();
+  if(k==="dlstop"){dl.stop=true;return toast("Unduhan berhenti setelah lagu ini selesai.")}
+  if(k==="lo"){if(confirm("Keluar dari akun?")){$("#sheet").classList.add("hide");signOut(auth)}return}
   if(k==="dpl"){$("#sheet").classList.add("hide");deleteDoc(doc(db,"users",uid,"playlists",delPid));return toast("Playlist dihapus. Lagu tetap ada.")}
   if(k==="dall"){const p=pls.find(x=>x.id===delPid),n=p?(p.songIds||[]).filter(i=>songs.some(x=>x.id===i)).length:0;$("#shp").innerHTML=`<div class="h">Hapus ${n} lagu?</div><div class="empty" style="padding:8px 10px 14px">Lagu dihapus permanen dari semua device dan tidak bisa dikembalikan.</div><button class="bad" data-s="dall2">Ya, hapus playlist dan lagunya</button><button data-s="cancel">Batal</button>`;return}
   if(k==="dall2"){$("#sheet").classList.add("hide");return void delAll(delPid)}
@@ -332,6 +348,71 @@ $("#sheet").onclick=e=>{
 };
 $("#home").onclick=()=>{tab="home";plOpen=null;$("#q").value="";render();$("#list").scrollTop=0};
 $("#nav").onclick=e=>{const b=e.target.closest("button[data-t]");if(!b)return;tab=tab===b.dataset.t?"home":b.dataset.t;plOpen=null;render()};
+
+/* ---------- pengaturan ---------- */
+const getTheme=()=>{try{const t=localStorage.getItem("essensong-theme");return t==="dark"||t==="light"?t:"auto"}catch(x){return"auto"}};
+function setTheme(v){
+  try{v==="auto"?localStorage.removeItem("essensong-theme"):localStorage.setItem("essensong-theme",v)}catch(x){}
+  v==="auto"?document.documentElement.removeAttribute("data-theme"):document.documentElement.setAttribute("data-theme",v);
+  document.querySelectorAll("#shp .seg button").forEach(x=>x.classList.toggle("on",x.dataset.v===v));
+}
+const sz=s=>s.size||(s.chunks||1)*CH;
+function offPct(extra=0){
+  const t=songs.reduce((a,s)=>a+sz(s),0);if(!t)return 0;
+  const d=songs.reduce((a,s)=>a+(cached.has(s.id)?sz(s):0),0);
+  return Math.min(100,Math.floor((d+extra)/t*100));
+}
+function setUI(){
+  const b=$("#dlb");if(!b)return;
+  const p=offPct(dl.on?dl.part:0),on=songs.filter(s=>cached.has(s.id)).length,all=songs.length&&on===songs.length;
+  b.style.width=p+"%";$("#dlp").textContent=p+"%";
+  $("#dls").textContent=!songs.length?"Belum ada lagu di perpustakaan.":dl.on?`Mengunduh lagu ${dl.cur} dari ${dl.n}…`:`${on} dari ${songs.length} lagu tersimpan offline`;
+  const bt=$("#dlbtn");bt.textContent=dl.on?"Hentikan unduhan":all?"Semua lagu sudah offline":"Unduh semua lagu";
+  bt.disabled=!songs.length||(!dl.on&&!!all);bt.dataset.s=dl.on?"dlstop":"dlall";
+}
+async function dlAll(){
+  if(dl.on)return;
+  if(!navigator.onLine)return toast("Perlu internet untuk mengunduh.");
+  const me=uid,list=songs.filter(x=>!cached.has(x.id));
+  if(!list.length)return toast("Semua lagu sudah tersimpan offline.");
+  Object.assign(dl,{on:true,stop:false,n:list.length,cur:0,fail:0,part:0});
+  for(const s of list){
+    if(dl.stop||uid!==me)break;
+    if(cached.has(s.id)){dl.cur++;continue}
+    dl.cur++;dl.part=0;busy.add(s.id);render();
+    try{await fetchSong(s,"",f=>{dl.part=f*sz(s);setUI()})}catch(x){dl.fail++}
+    busy.delete(s.id);dl.part=0;
+  }
+  const f=dl.fail,st=dl.stop;dl.on=false;render();
+  if(uid===me)toast(st?"Unduhan dihentikan.":f?`Selesai, ${f} lagu gagal diunduh. Coba lagi.`:"Semua lagu tersimpan untuk offline.",5000);
+}
+function runTxt(){
+  const n=new Date(),t0=new Date(n.getFullYear(),n.getMonth(),n.getDate()),days=Math.max(0,Math.round((t0-new Date(2026,9,24))/864e5));
+  if(!days)return"Baru dirilis hari ini";
+  let y=n.getFullYear()-2026,m=n.getMonth()-9,d=n.getDate()-24;
+  if(d<0){m--;d+=new Date(n.getFullYear(),n.getMonth(),0).getDate()}
+  if(m<0){y--;m+=12}
+  const p=[];if(y>0)p.push(y+" tahun");if(m>0)p.push(m+" bulan");if(d>0)p.push(d+" hari");
+  return p.join(" ")+(y>0||m>0?` (${days} hari)`:"");
+}
+function openSettings(){
+  ctx=null;importTo=null;const t=getTheme();$("#sheet").classList.remove("hide");
+  $("#shp").innerHTML=`<div class="h">Pengaturan</div>
+  <div class="sx"><div class="st">Unduh offline</div>
+    <div class="sr"><span id="dls"></span><b id="dlp">0%</b></div>
+    <div class="pg"><i id="dlb"></i></div>
+    <button class="btn" id="dlbtn" data-s="dlall">Unduh semua lagu</button>
+    <small>Biarkan aplikasi tetap terbuka selama proses unduh.</small></div>
+  <div class="sx"><div class="st">Tampilan</div><div class="seg">${[["auto","Otomatis"],["light","Terang"],["dark","Gelap"]].map(x=>`<button data-s="th" data-v="${x[0]}"${t===x[0]?' class="on"':""}>${x[1]}</button>`).join("")}</div></div>
+  <div class="sx"><div class="st">Tentang aplikasi</div>
+    <div class="ab"><span>Aplikasi</span><b>Essensong</b></div>
+    <div class="ab"><span>Tanggal rilis</span><b>24 Oktober 2026</b></div>
+    <div class="ab"><span>Sudah berjalan</span><b id="abd"></b></div></div>
+  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div>
+  <button data-s="cancel" style="text-align:center">Tutup</button>`;
+  $("#abd").textContent=runTxt();setUI();
+}
+$("#set").onclick=openSettings;
 
 /* ---------- upload ---------- */
 $("#nup").onclick=openImport;
@@ -397,6 +478,7 @@ const dur=f=>new Promise(r=>{const a=new Audio(),u=URL.createObjectURL(f);a.prel
 
 /* ---------- offline & hapus ---------- */
 async function toggleOffline(s){
+  if(busy.has(s.id))return;
   if(cached.has(s.id)){await iDel(key(s.id));cached.delete(s.id);return render()}
   if(!navigator.onLine)return toast("Perlu internet untuk mengunduh.");
   busy.add(s.id);render();
@@ -404,12 +486,12 @@ async function toggleOffline(s){
   catch(x){toast("Gagal mengunduh ("+(x.code||x.message)+")",6000)}
   busy.delete(s.id);render();
 }
-async function fetchSong(s,tag){
+async function fetchSong(s,tag,onp){
   const parts=[],n=s.chunks||1;
   for(let i=0;i<n;i+=4){
     const r=await Promise.all([...Array(Math.min(4,n-i)).keys()].map(k=>getDocFromServer(doc(db,"users",uid,"songs",s.id,"parts",String(i+k).padStart(4,"0")))));
     r.forEach(d=>{if(!d.exists())throw new Error("bagian lagu hilang");parts.push(d.data().d.toUint8Array())});
-    toast(`${tag}… ${Math.round(parts.length/n*100)}%`,30000);
+    if(onp)onp(parts.length/n);else toast(`${tag}… ${Math.round(parts.length/n*100)}%`,30000);
   }
   const b=new Blob(parts,{type:"audio/mpeg"});await iPut(key(s.id),b);cached.add(s.id);return b;
 }
