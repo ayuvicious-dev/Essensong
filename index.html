@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Essensong</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#9b7fe0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Essensong">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{--ink:#2a1f45;--sub:#7d7099;--vio:#9b7fe0;--vio2:#7f5fd0;--lav:#d9c9f5;--mist:#f6f2fd;--card:#fff;--line:#e6dcf7;--bad:#c0392b}
+@media(prefers-color-scheme:dark){:root{--ink:#efe9fb;--sub:#a79cc4;--lav:#4a3a78;--mist:#17112b;--card:#221a3d;--line:#352a58}}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:ui-rounded,"Segoe UI",system-ui,sans-serif;background:var(--mist);color:var(--ink);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--vio);outline-offset:2px}
+input{font:inherit;color:inherit}
+.hide{display:none!important}
+#auth{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:14px}
+#auth img{width:150px}
+#auth h1{font-size:1.9rem;letter-spacing:-.02em}
+#auth p.s{color:var(--sub);font-size:.95rem;text-align:center;max-width:280px}
+.f{width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px}
+.f input,.search{width:100%;padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--card)}
+.btn{padding:13px 16px;border-radius:14px;font-weight:600;background:var(--vio);color:#fff}
+.btn:active{background:var(--vio2)}
+.btn.o{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+.lnk{color:var(--vio2);font-size:.9rem;text-align:center}
+#err{color:var(--bad);font-size:.9rem;min-height:1.2em;text-align:center;max-width:300px}
+#app{height:100%;display:flex;flex-direction:column;max-width:640px;margin:0 auto}
+header{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 14px) 18px 10px}
+header img{width:42px}
+header h1{font-size:1.35rem;flex:1;letter-spacing:-.02em}
+.chip{font-size:.78rem;padding:4px 10px;border-radius:99px;background:var(--lav);color:var(--ink)}
+.bar{display:flex;gap:8px;padding:0 18px 10px}
+.bar .btn{white-space:nowrap}
+#list{flex:1;overflow:auto;padding:0 12px 12px}
+.row{display:flex;align-items:center;gap:6px;padding:8px 6px;border-radius:14px}
+.row.on{background:var(--lav)}
+.row .m{flex:1;min-width:0;text-align:left;padding:4px 6px}
+.row .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .a{font-size:.82rem;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--sub)}
+.ic.ok{color:var(--vio2)}
+.ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.empty{text-align:center;color:var(--sub);padding:48px 24px;line-height:1.5}
+#pl{background:var(--card);border-top:1.5px solid var(--line);padding:12px 18px 10px;border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(127,95,208,.12)}
+#pl .n{text-align:center;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pl .ar{text-align:center;font-size:.85rem;color:var(--sub);min-height:1.2em;margin-bottom:6px}
+.sk{display:flex;align-items:center;gap:10px;font-size:.78rem;color:var(--sub)}
+input[type=range]{flex:1;accent-color:var(--vio)}
+.ct{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px}
+.ct .ic{color:var(--ink)}.ct .ic.act{color:var(--vio2)}
+#pp{position:relative;width:84px;height:84px;margin:0 6px}
+#pp .c{position:absolute;inset:12px;border-radius:50%;background:var(--vio);display:grid;place-items:center;color:#fff}
+#pp .c svg{width:26px;height:26px;fill:#fff}
+#pp .w{position:absolute;top:50%;width:14px;height:34px;margin-top:-17px;border:4px solid var(--lav);border-bottom:0;border-left:0;border-radius:0 40px 40px 0;opacity:.6}
+#pp .w.l{left:-2px;transform:scaleX(-1)}#pp .w.r{right:-2px}
+.playing #pp .w{animation:pu 1.1s ease-in-out infinite alternate}
+.playing #pp .w.r{animation-delay:.3s}
+@keyframes pu{from{opacity:.25}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.playing #pp .w{animation:none}}
+.sec{display:flex;align-items:center;gap:6px;padding:2px 6px 8px}.sec b{flex:1;font-size:1.05rem}.sec span{font-size:.8rem;color:var(--sub)}
+.row .m.fl{display:flex;align-items:center;gap:12px}.fl svg{width:26px;height:26px;fill:none;stroke:var(--vio2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#nav{display:grid;grid-template-columns:repeat(5,1fr);background:var(--card);border-top:1.5px solid var(--line);padding:6px 4px calc(env(safe-area-inset-bottom,0px) + 6px)}
+#nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;font-size:.68rem;color:var(--sub);white-space:nowrap}
+#nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#nav button.on{color:var(--vio2);font-weight:700}
+#nav .plus{color:var(--ink)}
+#nav .plus i{width:44px;height:44px;margin-top:-20px;border-radius:50%;background:var(--vio);color:#fff;display:grid;place-items:center;border:4px solid var(--card)}
+#sheet{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,10,40,.55)}
+#sheet .pn{width:100%;max-width:400px;background:var(--card);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:4px;max-height:80%;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+#sheet .in{width:100%;padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--mist);margin:2px 0 6px}
+#sheet .h{font-weight:700;padding:0 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sheet button{padding:13px 10px;border-radius:12px;text-align:left}
+#sheet button:active{background:var(--lav)}
+.pk{display:flex;flex-direction:column;overflow:auto;max-height:50vh}
+.pi{display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;cursor:pointer}
+.pi input{width:20px;height:20px;accent-color:var(--vio);flex:none}
+.pi span{display:flex;flex-direction:column;min-width:0}
+.pi b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.pi small{color:var(--sub)}
+#sheet .btn{text-align:center;margin-top:8px;color:#fff}
+#sheet small{display:block;color:var(--sub);font-weight:400;margin-top:2px}
+#sheet button:disabled{opacity:.45}
+#sheet .bad{color:var(--bad)}
+#sheet svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:middle;margin-right:6px}
+#pl{touch-action:pan-y;transition:transform .22s ease}
+#pl.col{transform:translateX(105%)}
+#pl.gone{display:none}
+#pl .art,#pl .cl{display:none}
+#pl .cl{color:var(--ink)}
+#pl.full{position:fixed;inset:0;z-index:7;border:0;border-radius:0;box-shadow:none;background:var(--mist);padding:calc(env(safe-area-inset-top,0px) + 56px) 28px calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;flex-direction:column;justify-content:center;gap:6px;touch-action:auto}
+#pl.full .art{display:block;width:min(72vw,300px);aspect-ratio:1;object-fit:cover;border-radius:32px;margin:0 auto 22px;box-shadow:0 18px 50px rgba(127,95,208,.35)}
+#pl.full .cl{display:grid;position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:14px}
+#pl.full .n{font-size:1.4rem;white-space:normal}
+#pl.full .ar{font-size:1rem;margin-bottom:14px}
+#pl.full #pp{width:104px;height:104px}
+#pl.full #pp .c{inset:14px}
+#edge{position:fixed;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 140px);width:26px;height:68px;border-radius:16px 0 0 16px;background:var(--vio2);color:#fff;display:grid;place-items:center;z-index:6;touch-action:none;box-shadow:-2px 2px 12px rgba(0,0,0,.25)}
+#edge svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+#edge.playing{animation:eg 1.4s ease-in-out infinite alternate}
+@keyframes eg{from{box-shadow:-2px 2px 12px rgba(0,0,0,.25)}to{box-shadow:-2px 2px 18px 2px rgba(155,127,224,.8)}}
+@media(prefers-reduced-motion:reduce){#edge.playing{animation:none}#pl{transition:none}}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translateX(-50%);background:var(--ink);color:var(--mist);padding:10px 16px;border-radius:12px;font-size:.88rem;max-width:90%;z-index:9}
+</style>
+</head>
+<body>
+<section id="auth" class="hide">
+  <img src="icons/icon-512.png" alt="Essensong">
+  <h1>Essensong</h1>
+  <p class="s">Masuk untuk memutar musikmu di semua device.</p>
+  <div class="f">
+    <input id="em" type="email" placeholder="Email" autocomplete="email">
+    <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
+    <button class="btn" id="bin">Masuk</button>
+    <button class="btn o" id="bup">Daftar akun baru</button>
+    <button class="btn o" id="bgo">Masuk dengan Google</button>
+    <button class="lnk" id="brs">Lupa kata sandi?</button>
+  </div>
+  <div id="err"></div>
+</section>
+
+<section id="app" class="hide">
+  <header>
+    <img src="icons/icon-192.png" alt="">
+    <h1>Essensong</h1>
+    <span class="chip hide" id="off">Offline</span>
+    <button class="ic" id="home" aria-label="Beranda" title="Beranda"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button>
+    <button class="ic" id="out" aria-label="Keluar" title="Keluar"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+  </header>
+  <div class="bar">
+    <input class="search" id="q" type="search" placeholder="Cari lagu atau artis">
+    <input type="file" id="file" accept="audio/mpeg,.mp3" multiple class="hide">
+  </div>
+  <div id="list"></div>
+  <div id="pl">
+    <button class="ic cl" id="cl" aria-label="Tutup layar penuh"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+    <img class="art" src="icons/icon-512.png" alt="">
+    <div class="n" id="tn">Belum ada lagu diputar</div>
+    <div class="ar" id="ta"></div>
+    <div class="sk"><span id="cu">0:00</span><input type="range" id="sk" min="0" max="0" value="0" step="1" aria-label="Posisi lagu"><span id="du">0:00</span></div>
+    <div class="ct">
+      <button class="ic" id="sh" aria-label="Acak"><svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
+      <button class="ic" id="pv" aria-label="Sebelumnya"><svg viewBox="0 0 24 24"><path d="M19 20 9 12l10-8zM5 19V5"/></svg></button>
+      <button id="pp" aria-label="Putar atau jeda"><span class="w l"></span><span class="w r"></span><span class="c" id="pi"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>
+      <button class="ic" id="nx" aria-label="Berikutnya"><svg viewBox="0 0 24 24"><path d="m5 4 10 8-10 8zM19 5v14"/></svg></button>
+      <button class="ic" id="rp" aria-label="Ulangi"><svg viewBox="0 0 24 24"><path d="m17 1 4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+    </div>
+  </div>
+  <nav id="nav">
+    <button data-t="like"><svg viewBox="0 0 24 24"><path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1L12 21.5l8.8-8.8a5 5 0 0 0 0-7.1z"/></svg><span>Like Song</span></button>
+    <button data-t="most"><svg viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M15 7h6v6"/></svg><span>Most Played</span></button>
+    <button class="plus" id="nup" aria-label="Impor Lagu"><i><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></i><span>Impor Lagu</span></button>
+    <button data-t="last"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Last Played</span></button>
+    <button data-t="pl"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Playlist</span></button>
+  </nav>
+</section>
+<button id="edge" class="hide" aria-label="Buka pemutar"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+<div id="sheet" class="hide"><div class="pn" id="shp"></div></div>
+<div id="toast" class="hide"></div>
+<audio id="au" preload="auto" playsinline></audio>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,sendPasswordResetEmail,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,deleteDoc,onSnapshot,query,orderBy,arrayUnion,arrayRemove,updateDoc,Bytes,getDocFromServer,getDocsFromServer}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app=initializeApp({apiKey:"AIzaSyDcAvj4D9-fmVX5IT-2oH7grH6TiUaHvSQ",authDomain:"essensong.firebaseapp.com",projectId:"essensong",storageBucket:"essensong.firebasestorage.app",messagingSenderId:"643349788822",appId:"1:643349788822:web:5615a9c04699ffe29eaab7"});
+const auth=getAuth(app),db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+const $=s=>document.querySelector(s),au=$("#au");
+let uid=null,unsub=null,songs=[],view=[],queue=[],cur=null,cached=new Set(),busy=new Set(),shuf=false,rep=0,objUrl=null,urls={},ready=false,lerr="",CH=900000,tab="",plOpen=null,pls=[],ctx=null,importTo=null;
+
+if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));
+
+/* ---------- util ---------- */
+const fmt=s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let tt;const toast=(m,ms=3200)=>{const t=$("#toast");t.textContent=m;t.classList.remove("hide");clearTimeout(tt);tt=setTimeout(()=>t.classList.add("hide"),ms)};
+const net=()=>{$("#off").classList.toggle("hide",navigator.onLine)};addEventListener("online",net);addEventListener("offline",net);net();
+const ICO={dl:'<svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/></svg>',ok:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',wt:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',rm:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'};
+
+/* ---------- IndexedDB (lagu offline) ---------- */
+const idb=new Promise((res,rej)=>{const r=indexedDB.open("essensong",1);r.onupgradeneeded=()=>r.result.createObjectStore("a");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const tx=async(m,f)=>{const d=await idb;return new Promise((res,rej)=>{const t=d.transaction("a",m),q=f(t.objectStore("a"));t.oncomplete=()=>res(q.result);t.onerror=()=>rej(t.error)})};
+const iPut=(k,v)=>tx("readwrite",s=>s.put(v,k)),iGet=k=>tx("readonly",s=>s.get(k)),iDel=k=>tx("readwrite",s=>s.delete(k)),iKeys=()=>tx("readonly",s=>s.getAllKeys());
+const key=id=>uid+"/"+id;
+async function loadCached(){cached=new Set((await iKeys()).filter(k=>k.startsWith(uid+"/")).map(k=>k.slice(uid.length+1)))}
+
+/* ---------- login ---------- */
+const err=m=>{$("#err").textContent=m||""};
+const MSG={"auth/invalid-credential":"Email atau kata sandi salah.","auth/invalid-email":"Format email tidak valid.","auth/email-already-in-use":"Email sudah terdaftar. Silakan masuk.","auth/weak-password":"Kata sandi minimal 6 karakter.","auth/network-request-failed":"Tidak ada koneksi internet.","auth/too-many-requests":"Terlalu banyak percobaan. Coba lagi nanti.","auth/popup-closed-by-user":"Login Google dibatalkan."};
+const run=async f=>{err();try{await f()}catch(e){err(MSG[e.code]||"Gagal: "+(e.code||e.message))}};
+const cred=()=>[auth,$("#em").value.trim(),$("#pw").value];
+$("#bin").onclick=()=>run(()=>signInWithEmailAndPassword(...cred()));
+$("#bup").onclick=()=>run(()=>createUserWithEmailAndPassword(...cred()));
+$("#bgo").onclick=()=>run(()=>signInWithPopup(auth,new GoogleAuthProvider()));
+$("#brs").onclick=()=>run(async()=>{const e=$("#em").value.trim();if(!e)return err("Isi email dulu, lalu tekan Lupa kata sandi.");await sendPasswordResetEmail(auth,e);err("Link reset dikirim ke email kamu.")});
+$("#out").onclick=()=>signOut(auth);
+
+onAuthStateChanged(auth,async u=>{
+  if(unsub){unsub();unsub=null}
+  if(!u){uid=null;au.pause();au.removeAttribute("src");cur=null;songs=[];setPS("panel");$("#auth").classList.remove("hide");$("#app").classList.add("hide");return}
+  uid=u.uid;ready=false;lerr="";tab="home";plOpen=null;pls=[];$("#auth").classList.add("hide");$("#app").classList.remove("hide");
+  await loadCached();render();
+  const u1=onSnapshot(query(collection(db,"users",uid,"songs"),orderBy("createdAt","desc")),s=>{songs=s.docs.map(d=>({id:d.id,...d.data()}));ready=true;lerr="";render()},e=>{ready=true;lerr=e.code;render()});
+  const u2=onSnapshot(collection(db,"users",uid,"playlists"),s=>{pls=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));render()},()=>{});unsub=()=>{u1();u2()};
+});
+
+/* ---------- daftar lagu ---------- */
+$("#q").oninput=render;
+Object.assign(ICO,{h:'<svg viewBox="0 0 24 24"><path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1L12 21.5l8.8-8.8a5 5 0 0 0 0-7.1z"/></svg>',hf:'<svg viewBox="0 0 24 24" style="fill:currentColor"><path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1L12 21.5l8.8-8.8a5 5 0 0 0 0-7.1z"/></svg>',more:'<svg viewBox="0 0 24 24"><path d="M12 5h.01M12 12h.01M12 19h.01" stroke-width="3.5"/></svg>',fo:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',bk:'<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>'});
+const TT={home:"Baru ditambahkan","":"Semua lagu",like:"Lagu disukai",most:"Paling sering diputar",last:"Terakhir diputar",pl:"Playlist"};
+const EM={home:"Belum ada lagu.<br>Tekan Impor Lagu untuk menambah lagu.","":"Perpustakaanmu masih kosong.<br>Tekan Impor Lagu untuk menambah lagu.",like:"Belum ada lagu yang kamu sukai.<br>Ketuk ikon hati di samping lagu.",most:"Belum ada riwayat putar.",last:"Belum ada lagu yang diputar.",pl:"Playlist ini masih kosong.<br>Tekan Tambah lagu di atas untuk memilih dari lagu yang sudah kamu impor."};
+function songsFor(){
+  let a=songs;
+  if(tab==="home")a=songs.slice().sort((x,y)=>(y.createdAt||0)-(x.createdAt||0)).slice(0,20);
+  if(tab==="like")a=a.filter(x=>x.liked);
+  else if(tab==="most")a=a.filter(x=>x.plays>0).sort((x,y)=>y.plays-x.plays);
+  else if(tab==="last")a=a.filter(x=>x.lastPlayed).sort((x,y)=>y.lastPlayed-x.lastPlayed).slice(0,50);
+  else if(tab==="pl"&&plOpen){const p=pls.find(x=>x.id===plOpen);a=(p?p.songIds||[]:[]).map(id=>songs.find(x=>x.id===id)).filter(Boolean)}
+  const q=$("#q").value.toLowerCase();
+  return q?a.filter(x=>(x.title+" "+x.artist).toLowerCase().includes(q)):a;
+}
+const rowH=s=>{
+  const c=cached.has(s.id),b=busy.has(s.id);
+  const ex=tab==="home"&&s.createdAt?" · "+new Date(s.createdAt).toLocaleDateString("id-ID",{day:"numeric",month:"short"}):tab==="most"?" · "+s.plays+"×":tab==="last"?" · "+new Date(s.lastPlayed).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+  return `<div class="row${cur&&cur.id===s.id?" on":""}" data-id="${s.id}">
+    <button class="m" data-a="play"><div class="t">${esc(s.title)}</div><div class="a">${esc(s.artist||"Artis tidak diketahui")} · ${fmt(s.duration)}${ex}</div></button>
+    <button class="ic${s.liked?" ok":""}" data-a="like" aria-label="${s.liked?"Hapus dari Like Song":"Like Song"}">${s.liked?ICO.hf:ICO.h}</button>
+    <button class="ic${c?" ok":""}" data-a="off" aria-label="${c?"Hapus dari offline":"Simpan offline"}" title="${c?"Tersimpan offline (ketuk untuk hapus)":"Simpan offline"}">${b?ICO.wt:c?ICO.ok:ICO.dl}</button>
+    <button class="ic" data-a="more" aria-label="Menu lagu">${ICO.more}</button></div>`};
+function render(){
+  $("#home").classList.toggle("ok",tab==="home");
+  document.querySelectorAll("#nav [data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===tab));
+  view=songsFor();let h="";
+  if(tab==="pl"&&!plOpen){
+    h=`<div class="sec"><b>Playlist</b><span>${pls.length} folder</span></div><button class="btn o" data-a="newpl" style="width:100%;margin-bottom:8px">+ Playlist baru</button>`+
+      (pls.length?pls.map(p=>`<div class="row" data-pl="${p.id}"><button class="m fl" data-a="openpl">${ICO.fo}<span><div class="t">${esc(p.name)}</div><div class="a">${(p.songIds||[]).filter(i=>songs.some(x=>x.id===i)).length} lagu</div></span></button><button class="ic" data-a="delpl" aria-label="Hapus playlist">${ICO.rm}</button></div>`).join(""):`<div class="empty">Belum ada playlist.<br>Buat folder untuk mengelompokkan lagumu.</div>`);
+  }else{
+    const p=tab==="pl"&&pls.find(x=>x.id===plOpen);
+    h=`<div class="sec">${p?`<button class="ic" data-a="back" aria-label="Kembali">${ICO.bk}</button>`:""}<b>${p?esc(p.name):TT[tab]}</b><span>${view.length} lagu</span></div>`+(p?`<button class="btn o" data-a="addsongs" style="width:100%;margin-bottom:8px">+ Tambah lagu</button>`:"")+
+      (view.length?view.map(rowH).join("")+(tab==="home"?`<button class="btn o" data-a="all" style="width:100%;margin-top:8px">Lihat semua lagu (${songs.length})</button>`:""):`<div class="empty">${lerr?"Gagal memuat perpustakaan ("+lerr+").<br>Cek rules Firestore sudah di-publish, lalu muat ulang halaman.":!ready?"Memuat perpustakaan…":$("#q").value?"Tidak ada lagu yang cocok.":EM[plOpen?"pl":tab]}</div>`);
+  }
+  $("#list").innerHTML=h;
+}
+$("#list").onclick=e=>{
+  const b=e.target.closest("button[data-a]");if(!b)return;const a=b.dataset.a,row=b.closest(".row");
+  if(a==="back"){plOpen=null;return render()}
+  if(a==="all"){tab="";return render()}
+  if(a==="addsongs")return openPicker();
+  if(a==="newpl")return askName(n=>{createPl(n);$("#sheet").classList.add("hide")});
+  if(row&&row.dataset.pl){
+    if(a==="openpl"){plOpen=row.dataset.pl;return render()}
+    if(a==="delpl"){const p=pls.find(x=>x.id===row.dataset.pl);if(p)openDelPl(p);return}
+  }
+  const s=row&&songs.find(x=>x.id===row.dataset.id);if(!s)return;
+  if(a==="play"){queue=view.map(x=>x.id);play(s)}
+  else if(a==="like")setDoc(doc(db,"users",uid,"songs",s.id),{liked:!s.liked},{merge:true});
+  else if(a==="off")toggleOffline(s);
+  else if(a==="more")openSheet(s);
+};
+let nameCb=null;
+function askName(cb){
+  nameCb=cb;$("#sheet").classList.remove("hide");
+  $("#shp").innerHTML=`<div class="h">Playlist baru</div><input class="in" id="pn" placeholder="Nama playlist" maxlength="40" autocomplete="off"><button class="btn" data-s="nm">Simpan</button><button data-s="cancel">Batal</button>`;
+  setTimeout(()=>$("#pn").focus(),50);
+}
+$("#shp").onkeydown=e=>{if(e.key==="Enter"&&e.target.id==="pn")$("#shp").querySelector('[data-s="nm"]').click()};
+function createPl(n,s){
+  const r=doc(collection(db,"users",uid,"playlists"));
+  setDoc(r,{name:n,songIds:s?[s.id]:[],createdAt:Date.now()}).catch(x=>toast("Gagal membuat playlist ("+x.code+")"));return r.id;
+}
+let delPid=null;
+function openDelPl(p){
+  delPid=p.id;const n=(p.songIds||[]).filter(i=>songs.some(x=>x.id===i)).length;
+  $("#sheet").classList.remove("hide");
+  $("#shp").innerHTML=`<div class="h">Hapus playlist “${esc(p.name)}”</div><button data-s="dpl">Hapus playlist saja<small>Lagu tetap ada di perpustakaan</small></button><button class="bad" data-s="dall"${n?"":" disabled"}>Hapus playlist dan lagunya<small>${n?n+" lagu ikut terhapus permanen":"Playlist ini tidak punya lagu"}</small></button><button data-s="cancel">Batal</button>`;
+}
+async function delAll(pid){
+  const p=pls.find(x=>x.id===pid);if(!p)return;
+  if(!navigator.onLine)return toast("Perlu internet untuk menghapus lagu.");
+  const list=(p.songIds||[]).map(id=>songs.find(x=>x.id===id)).filter(Boolean);
+  for(let i=0;i<list.length;i++){toast(`Menghapus lagu ${i+1}/${list.length}…`,30000);await remove(list[i])}
+  await deleteDoc(doc(db,"users",uid,"playlists",pid));
+  toast("Playlist dan "+list.length+" lagu dihapus.");
+}
+function openImport(){
+  importTo=null;ctx=null;$("#sheet").classList.remove("hide");
+  $("#shp").innerHTML=`<div class="h">Impor lagu ke…</div>`+pls.map(p=>`<button data-s="imp" data-p="${p.id}">${ICO.fo} ${esc(p.name)}</button>`).join("")+`<button data-s="impnew">+ Playlist baru</button><button data-s="impnone">Tanpa playlist</button>`;
+}
+function openPicker(){
+  const p=pls.find(x=>x.id===plOpen);if(!p)return;
+  const have=new Set(p.songIds||[]),av=songs.filter(x=>!have.has(x.id));
+  $("#sheet").classList.remove("hide");
+  $("#shp").innerHTML=`<div class="h">Tambah lagu ke ${esc(p.name)}</div>`+(av.length?`<div class="pk">`+av.map(x=>`<label class="pi"><input type="checkbox" value="${x.id}"><span><b>${esc(x.title)}</b><small>${esc(x.artist||"Artis tidak diketahui")}</small></span></label>`).join("")+`</div><button class="btn" data-s="pick">Tambahkan</button>`:`<div class="empty">${songs.length?"Semua lagu sudah ada di playlist ini.":"Belum ada lagu. Impor lagu dulu lewat tombol +."}</div>`);
+}
+function openSheet(s,mode){
+  ctx=s;$("#sheet").classList.remove("hide");const pn=$("#shp");
+  pn.innerHTML=mode==="pl"
+    ?`<div class="h">Tambah ke playlist</div>`+pls.map(p=>`<button data-s="add" data-p="${p.id}">${ICO.fo} ${esc(p.name)}</button>`).join("")+`<button data-s="new">+ Playlist baru</button>`
+    :`<div class="h">${esc(s.title)}</div><button data-s="topl">Tambah ke playlist</button>${tab==="pl"&&plOpen?`<button data-s="rmpl">Keluarkan dari playlist ini</button>`:""}<button class="bad" data-s="del">Hapus lagu</button>`;
+}
+$("#sheet").onclick=e=>{
+  if(e.target.id==="sheet")return $("#sheet").classList.add("hide");
+  const b=e.target.closest("button[data-s]");if(!b)return;const k=b.dataset.s,s=ctx;
+  if(k==="cancel")return $("#sheet").classList.add("hide");
+  if(k==="dpl"){$("#sheet").classList.add("hide");deleteDoc(doc(db,"users",uid,"playlists",delPid));return toast("Playlist dihapus. Lagu tetap ada.")}
+  if(k==="dall"){const p=pls.find(x=>x.id===delPid),n=p?(p.songIds||[]).filter(i=>songs.some(x=>x.id===i)).length:0;$("#shp").innerHTML=`<div class="h">Hapus ${n} lagu?</div><div class="empty" style="padding:8px 10px 14px">Lagu dihapus permanen dari semua device dan tidak bisa dikembalikan.</div><button class="bad" data-s="dall2">Ya, hapus playlist dan lagunya</button><button data-s="cancel">Batal</button>`;return}
+  if(k==="dall2"){$("#sheet").classList.add("hide");return void delAll(delPid)}
+  if(k==="nm"){const n=$("#pn").value.trim();if(!n)return toast("Isi nama playlist dulu.");const cb=nameCb;nameCb=null;return cb&&cb(n)}
+  if(k==="new")return askName(n=>{createPl(n,s);$("#sheet").classList.add("hide");toast("Playlist dibuat.")});
+  if(k==="impnew")return askName(n=>{importTo=createPl(n);$("#shp").innerHTML=`<div class="h">Playlist dibuat</div><button class="btn" data-s="file">Pilih file mp3</button>`});
+  if(k==="pick"){
+    const ids=[...$("#shp").querySelectorAll("input:checked")].map(i=>i.value);
+    if(!ids.length)return toast("Pilih minimal satu lagu.");
+    $("#sheet").classList.add("hide");
+    updateDoc(doc(db,"users",uid,"playlists",plOpen),{songIds:arrayUnion(...ids)}).catch(()=>{});
+    return toast(ids.length+" lagu ditambahkan.");
+  }
+  if(k==="imp"||k==="impnone"||k==="file"){importTo=k==="imp"?b.dataset.p:k==="file"?importTo:null;$("#sheet").classList.add("hide");return $("#file").click()}
+  if(k==="topl")return openSheet(s,"pl");
+  $("#sheet").classList.add("hide");
+  if(k==="add"){updateDoc(doc(db,"users",uid,"playlists",b.dataset.p),{songIds:arrayUnion(s.id)}).catch(()=>{});toast("Ditambahkan ke playlist.")}
+  else if(k==="rmpl")updateDoc(doc(db,"users",uid,"playlists",plOpen),{songIds:arrayRemove(s.id)}).catch(()=>{});
+  else if(k==="del"&&confirm("Hapus “"+s.title+"” dari semua device?"))remove(s);
+};
+$("#home").onclick=()=>{tab="home";plOpen=null;$("#q").value="";render();$("#list").scrollTop=0};
+$("#nav").onclick=e=>{const b=e.target.closest("button[data-t]");if(!b)return;tab=tab===b.dataset.t?"home":b.dataset.t;plOpen=null;render()};
+
+/* ---------- upload ---------- */
+$("#nup").onclick=openImport;
+$("#file").onchange=async e=>{
+  const pid=importTo;importTo=null;
+  const fs=[...e.target.files].filter(f=>/\.mp3$|audio\/mpeg/i.test(f.name+f.type));e.target.value="";
+  if(!fs.length)return toast("Pilih file berformat mp3.");
+  if(!navigator.onLine)return toast("Upload butuh koneksi internet.");
+  let n=0,saved=0,okc=0;
+  for(const f of fs){
+    n++;if(f.size>30*1048576){toast("“"+f.name+"” lebih dari 30 MB, dilewati.",5000);continue}const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6),tag=await id3(f);
+    try{
+      const d0=await dur(f);
+      if(!d0){toast("“"+f.name+"” bukan mp3 yang bisa diputar, dilewati.",5000);continue}
+      let up=await strip(f),d1=up===f?d0:await dur(up);
+      if(up!==f&&(!d1||Math.abs(d1-d0)>2)){up=f;d1=d0}
+      saved+=f.size-up.size;
+      const nc=Math.ceil(up.size/CH);
+      for(let i=0;i<nc;i++){
+        const buf=new Uint8Array(await up.slice(i*CH,(i+1)*CH).arrayBuffer());
+        await setDoc(doc(db,"users",uid,"songs",id,"parts",String(i).padStart(4,"0")),{d:Bytes.fromUint8Array(buf)});
+        toast(`Upload ${n}/${fs.length}: ${Math.round((i+1)/nc*100)}%`);
+      }
+      await setDoc(doc(db,"users",uid,"songs",id),{title:tag.title||f.name.replace(/\.mp3$/i,""),artist:tag.artist||"",duration:d1,size:up.size,chunks:nc,createdAt:Date.now()});
+      await iPut(key(id),up);cached.add(id);okc++;
+      if(pid)updateDoc(doc(db,"users",uid,"playlists",pid),{songIds:arrayUnion(id)}).catch(()=>{});
+    }catch(x){try{await dropParts(id)}catch(e){}toast("Upload gagal ("+(x.code||x.message)+"). "+hint(x.code),9000);}
+  }
+  toast("Upload selesai."+(saved>1e4?` Hemat ${(saved/1048576).toFixed(1)} MB tanpa mengubah kualitas audio.`:""),6000);if(pid&&okc){tab="pl";plOpen=pid}render();
+};
+const hint=c=>c==="permission-denied"?"Rules Firestore belum benar.":c==="resource-exhausted"?"Kuota harian Firestore gratis habis, coba lagi besok.":"";
+/* Kompres tanpa kehilangan kualitas: buang cover art, tag, dan padding. Data audio mp3 tidak disentuh. */
+async function sniff(b){
+  const h=new Uint8Array(await b.slice(0,12).arrayBuffer()),t=String.fromCharCode(...h);
+  if(t.slice(4,8)==="ftyp")return"audio/mp4";if(t.startsWith("OggS"))return"audio/ogg";if(t.startsWith("fLaC"))return"audio/flac";
+  if(t.startsWith("RIFF")&&t.slice(8,12)==="WAVE")return"audio/wav";return"audio/mpeg";
+}
+const head=async b=>[...new Uint8Array(await b.slice(0,6).arrayBuffer())].map(x=>x.toString(16).padStart(2,"0")).join(" ");
+async function strip(f){try{
+  const h0=new Uint8Array(await f.slice(0,3).arrayBuffer());
+  if(await sniff(f)!=="audio/mpeg"||!(String.fromCharCode(...h0)==="ID3"||(h0[0]===255&&(h0[1]&224)===224)))return f;
+  let s=0;
+  for(let k=0;k<3;k++){const h=new Uint8Array(await f.slice(s,s+10).arrayBuffer());if(String.fromCharCode(h[0],h[1],h[2])!=="ID3")break;s+=10+((h[6]&127)<<21|(h[7]&127)<<14|(h[8]&127)<<7|(h[9]&127))+(h[5]&16?10:0)}
+  let e=f.size;
+  if(e>256){const t=new Uint8Array(await f.slice(e-128,e-125).arrayBuffer());if(String.fromCharCode(t[0],t[1],t[2])==="TAG")e-=128}
+  const w=new Uint8Array(await f.slice(s,s+65536).arrayBuffer());let o=-1;
+  for(let i=0;i<w.length-1;i++)if(w[i]===255&&(w[i+1]&224)===224&&(w[i+1]&6)!==0&&(w[i+1]&24)!==8&&(w[i+2]>>4)!==15&&((w[i+2]>>2)&3)!==3){o=i;break}
+  if(o<0)return f;
+  const b=f.slice(s+o,e,"audio/mpeg");return b.size<f.size?b:f;
+}catch(x){return f}}
+async function id3(f){const r={};try{
+  const b=new Uint8Array(await f.slice(0,300000).arrayBuffer());
+  if(String.fromCharCode(b[0],b[1],b[2])!=="ID3")return r;
+  const v=b[3],end=Math.min(b.length,10+((b[6]&127)<<21|(b[7]&127)<<14|(b[8]&127)<<7|(b[9]&127)));let p=10;
+  while(p+10<end){
+    const id=String.fromCharCode(b[p],b[p+1],b[p+2],b[p+3]);
+    const sz=v===4?((b[p+4]&127)<<21|(b[p+5]&127)<<14|(b[p+6]&127)<<7|(b[p+7]&127)):(b[p+4]<<24|b[p+5]<<16|b[p+6]<<8|b[p+7]);
+    if(!sz||!/^[A-Z0-9]{4}$/.test(id))break;
+    if(id==="TIT2"||id==="TPE1"){const e=b[p+10];r[id==="TIT2"?"title":"artist"]=new TextDecoder(e===1?"utf-16":e===2?"utf-16be":e===3?"utf-8":"iso-8859-1").decode(b.slice(p+11,p+10+sz)).replace(/\0/g,"").trim()}
+    p+=10+sz}
+}catch(x){}return r}
+const dur=f=>new Promise(r=>{const a=new Audio(),u=URL.createObjectURL(f);a.preload="metadata";a.onloadedmetadata=()=>{r(a.duration||0);URL.revokeObjectURL(u)};a.onerror=()=>{r(0);URL.revokeObjectURL(u)};a.src=u});
+
+/* ---------- offline & hapus ---------- */
+async function toggleOffline(s){
+  if(cached.has(s.id)){await iDel(key(s.id));cached.delete(s.id);return render()}
+  if(!navigator.onLine)return toast("Perlu internet untuk mengunduh.");
+  busy.add(s.id);render();
+  try{await fetchSong(s,"Mengunduh");toast("Tersimpan untuk offline.")}
+  catch(x){toast("Gagal mengunduh ("+(x.code||x.message)+")",6000)}
+  busy.delete(s.id);render();
+}
+async function fetchSong(s,tag){
+  const parts=[],n=s.chunks||1;
+  for(let i=0;i<n;i+=4){
+    const r=await Promise.all([...Array(Math.min(4,n-i)).keys()].map(k=>getDocFromServer(doc(db,"users",uid,"songs",s.id,"parts",String(i+k).padStart(4,"0")))));
+    r.forEach(d=>{if(!d.exists())throw new Error("bagian lagu hilang");parts.push(d.data().d.toUint8Array())});
+    toast(`${tag}… ${Math.round(parts.length/n*100)}%`,30000);
+  }
+  const b=new Blob(parts,{type:"audio/mpeg"});await iPut(key(s.id),b);cached.add(s.id);return b;
+}
+async function dropParts(id){const q=await getDocsFromServer(collection(db,"users",uid,"songs",id,"parts"));await Promise.all(q.docs.map(d=>deleteDoc(d.ref)))}
+async function remove(s){
+  try{await dropParts(s.id)}catch(x){}
+  await deleteDoc(doc(db,"users",uid,"songs",s.id));await iDel(key(s.id));cached.delete(s.id);
+  if(cur&&cur.id===s.id){au.pause();cur=null;info()}
+}
+
+/* ---------- pemutar ---------- */
+const healed=new Set();let playTok=0;
+async function play(s){
+  if(!s)return;const tok=++playTok;
+  let src,b;
+  try{
+    b=await iGet(key(s.id));
+    if(!b){if(!navigator.onLine)return toast("Lagu ini belum disimpan offline.");b=await fetchSong(s,"Memuat lagu");render()}
+    if(tok!==playTok)return;
+    b=new Blob([b],{type:await sniff(b)});
+    if(objUrl)URL.revokeObjectURL(objUrl);src=objUrl=URL.createObjectURL(b);$("#toast").classList.add("hide");
+  }catch(x){return toast("Gagal memuat lagu: "+(x.code||x.message))}
+  cur=s;au.src=src;info();render();
+  setDoc(doc(db,"users",uid,"songs",s.id),{plays:(s.plays||0)+1,lastPlayed:Date.now()},{merge:true}).catch(()=>{});
+  try{await au.play()}catch(x){if(x.name==="NotAllowedError")toast("Ketuk tombol putar untuk memulai.");else if(x.name!=="AbortError")toast("Gagal memutar ("+x.name+"). Ukuran "+(b.size/1048576).toFixed(1)+" MB, awal file: "+await head(b),9000)}
+}
+function info(){
+  $("#tn").textContent=cur?cur.title:"Belum ada lagu diputar";$("#ta").textContent=cur?cur.artist:"";
+  if("mediaSession"in navigator){
+    navigator.mediaSession.metadata=cur?new MediaMetadata({title:cur.title,artist:cur.artist||"Essensong",album:"Essensong",artwork:[{src:"icons/icon-192.png",sizes:"192x192",type:"image/png"},{src:"icons/icon-512.png",sizes:"512x512",type:"image/png"}]}):null}
+}
+function step(d){
+  if(!queue.length)queue=view.map(x=>x.id);
+  const i=queue.indexOf(cur&&cur.id);let n;
+  if(shuf&&queue.length>1){do n=Math.floor(Math.random()*queue.length);while(n===i)}
+  else{n=i+d;if(n>=queue.length){if(rep!==1&&d>0&&!arguments[1])return;n=0}if(n<0)n=queue.length-1}
+  play(songs.find(x=>x.id===queue[n]));
+}
+const toggle=()=>{if(!cur)return view[0]&&(queue=view.map(x=>x.id),play(view[0]));au.paused?au.play():au.pause()};
+$("#pp").onclick=toggle;$("#nx").onclick=()=>step(1,true);
+$("#pv").onclick=()=>{if(au.currentTime>3)au.currentTime=0;else step(-1)};
+$("#sh").onclick=e=>{shuf=!shuf;e.currentTarget.classList.toggle("act",shuf)};
+$("#rp").onclick=e=>{rep=(rep+1)%3;e.currentTarget.classList.toggle("act",rep>0);e.currentTarget.title=["Ulangi: mati","Ulangi semua","Ulangi satu lagu"][rep];toast(e.currentTarget.title)};
+$("#sk").oninput=e=>{au.currentTime=+e.target.value};
+au.onended=()=>{if(rep===2){au.currentTime=0;au.play()}else step(1,rep===1)};
+au.onerror=async()=>{
+  if(!cur)return;const s=cur;
+  if(!healed.has(s.id)&&navigator.onLine){healed.add(s.id);toast("Memperbaiki lagu…",8000);try{await iDel(key(s.id));cached.delete(s.id);await play(s);return}catch(x){}}
+  toast("Lagu tidak bisa diputar. Hapus lalu impor ulang.",6000);
+};
+au.onplay=()=>{$("#pl").classList.add("playing");$("#edge").classList.add("playing");$("#pi").innerHTML='<svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';if("mediaSession"in navigator)navigator.mediaSession.playbackState="playing"};
+au.onpause=()=>{$("#pl").classList.remove("playing");$("#edge").classList.remove("playing");$("#pi").innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';if("mediaSession"in navigator)navigator.mediaSession.playbackState="paused"};
+au.onloadedmetadata=()=>{$("#sk").max=Math.floor(au.duration)||0;$("#du").textContent=fmt(au.duration)};
+let lp=0;au.ontimeupdate=()=>{
+  $("#sk").value=Math.floor(au.currentTime);$("#cu").textContent=fmt(au.currentTime);
+  if("mediaSession"in navigator&&navigator.mediaSession.setPositionState&&au.duration&&Date.now()-lp>1000){lp=Date.now();try{navigator.mediaSession.setPositionState({duration:au.duration,position:au.currentTime,playbackRate:1})}catch(x){}}
+};
+
+/* ---------- panel pemutar: geser ke tepi, atau layar penuh ---------- */
+const pl=$("#pl"),ed=$("#edge");let ps="panel",prevPS="panel",gt;
+function setPS(x){
+  ps=x;pl.classList.toggle("full",x==="full");
+  if(x==="col"){pl.classList.add("col");clearTimeout(gt);gt=setTimeout(()=>{if(ps==="col")pl.classList.add("gone")},240)}
+  else{pl.classList.remove("gone");void pl.offsetWidth;pl.classList.remove("col")}
+  ed.classList.toggle("hide",x!=="col");
+}
+const openFull=()=>{if(ps!=="full"){prevPS=ps;setPS("full")}};
+$("#cl").onclick=()=>setPS(prevPS==="full"?"panel":prevPS);
+let dx0=null,dy0=0,drag=false,sup=false;
+pl.addEventListener("pointerdown",e=>{if(ps!=="panel"||e.target.closest("input[type=range]"))return;dx0=e.clientX;dy0=e.clientY;drag=false});
+pl.addEventListener("pointermove",e=>{
+  if(dx0===null)return;
+  if(e.pointerType==="mouse"&&!e.buttons){dx0=null;return}
+  const dx=e.clientX-dx0,dy=e.clientY-dy0;
+  if(!drag){if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)*1.5){drag=true;pl.setPointerCapture(e.pointerId);pl.style.transition="none"}else return}
+  pl.style.transform=`translateX(${Math.max(0,dx)}px)`;
+});
+const endDrag=e=>{
+  if(dx0===null)return;const dx=e.clientX-dx0;dx0=null;
+  if(!drag)return;drag=false;sup=true;setTimeout(()=>sup=false,60);
+  pl.style.transition="";pl.style.transform="";
+  if(e.type==="pointerup"&&dx>90)setPS("col");
+};
+pl.addEventListener("pointerup",endDrag);pl.addEventListener("pointercancel",endDrag);
+pl.addEventListener("click",e=>{if(sup){e.stopPropagation();e.preventDefault()}},true);
+pl.addEventListener("click",e=>{if(ps==="panel"&&e.target.closest(".n,.ar"))openFull()});
+let ex=null;
+ed.addEventListener("pointerdown",e=>{ex=e.clientX;ed.setPointerCapture(e.pointerId)});
+ed.addEventListener("pointerup",e=>{if(ex===null)return;const d=e.clientX-ex;ex=null;if(d<-30)setPS("panel");else if(Math.abs(d)<10)openFull()});
+ed.addEventListener("pointercancel",()=>{ex=null});
+ed.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openFull()}});
+
+/* ---------- kontrol layar kunci / notifikasi (jalan di background) ---------- */
+if("mediaSession"in navigator){
+  const m=navigator.mediaSession,h=(a,f)=>{try{m.setActionHandler(a,f)}catch(x){}};
+  h("play",()=>au.play());h("pause",()=>au.pause());
+  h("previoustrack",()=>$("#pv").click());h("nexttrack",()=>step(1,true));
+  h("seekbackward",d=>{au.currentTime=Math.max(0,au.currentTime-(d.seekOffset||10))});
+  h("seekforward",d=>{au.currentTime=Math.min(au.duration||0,au.currentTime+(d.seekOffset||10))});
+  h("seekto",d=>{au.currentTime=d.seekTime});
+}
+</script>
+</body>
+</html>
