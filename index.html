@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Essensong">
-<link rel="icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/favicon.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
 :root{color-scheme:light;--ink:#2a1f45;--sub:#7d7099;--vio:#9b7fe0;--vio2:#7f5fd0;--lav:#d9c9f5;--mist:#f6f2fd;--card:#fff;--line:#e6dcf7;--bad:#c0392b}
@@ -589,8 +589,8 @@ if("mediaSession"in navigator){
   const m=navigator.mediaSession,h=(a,f)=>{try{m.setActionHandler(a,f)}catch(x){}};
   h("play",()=>au.play());h("pause",()=>au.pause());
   h("previoustrack",()=>$("#pv").click());h("nexttrack",()=>step(1,true));
-  h("seekbackward",d=>{au.currentTime=Math.max(0,au.currentTime-(d.seekOffset||10))});
-  h("seekforward",d=>{au.currentTime=Math.min(au.duration||0,au.currentTime+(d.seekOffset||10))});
+  /* seekbackward/seekforward sengaja tidak dipasang: iOS akan menampilkan tombol 10 detik menggantikan tombol lagu sebelumnya/berikutnya */
+  h("seekbackward",null);h("seekforward",null);
   h("seekto",d=>{au.currentTime=d.seekTime});
 }
 </script>
