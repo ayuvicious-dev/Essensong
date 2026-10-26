@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Essensong">
 <link rel="icon" type="image/png" href="icons/favicon.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-v3.png">
 <style>
 :root{color-scheme:light;--ink:#2a1f45;--sub:#7d7099;--vio:#9b7fe0;--vio2:#7f5fd0;--lav:#d9c9f5;--mist:#f6f2fd;--card:#fff;--line:#e6dcf7;--bad:#c0392b}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--ink:#efe9fb;--sub:#a79cc4;--lav:#4a3a78;--mist:#17112b;--card:#221a3d;--line:#352a58}}
@@ -408,7 +408,7 @@ function openSettings(){
     <div class="ab"><span>Aplikasi</span><b>Essensong</b></div>
     <div class="ab"><span>Tanggal rilis</span><b>24 Oktober 2026</b></div>
     <div class="ab"><span>Sudah berjalan</span><b id="abd"></b></div></div>
-  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div>
+  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div><div style="text-align:center;font-size:11px;opacity:.5;padding:6px 0">Versi 4</div>
   <button data-s="cancel" style="text-align:center">Tutup</button>`;
   $("#abd").textContent=runTxt();setUI();
 }
@@ -519,9 +519,10 @@ async function play(s){
   try{await au.play()}catch(x){if(x.name==="NotAllowedError")toast("Ketuk tombol putar untuk memulai.");else if(x.name!=="AbortError")toast("Gagal memutar ("+x.name+"). Ukuran "+(b.size/1048576).toFixed(1)+" MB, awal file: "+await head(b),9000)}
 }
 function info(){
+  bindMS();
   $("#tn").textContent=cur?cur.title:"Belum ada lagu diputar";$("#ta").textContent=cur?cur.artist:"";
   if("mediaSession"in navigator){
-    navigator.mediaSession.metadata=cur?new MediaMetadata({title:cur.title,artist:cur.artist||"Essensong",album:"Essensong",artwork:[{src:"icons/icon-192.png",sizes:"192x192",type:"image/png"},{src:"icons/icon-512.png",sizes:"512x512",type:"image/png"}]}):null}
+    navigator.mediaSession.metadata=cur?new MediaMetadata({title:cur.title,artist:cur.artist||"Essensong",album:"Essensong",artwork:[{src:"icons/icon-192.png?v=4",sizes:"192x192",type:"image/png"},{src:"icons/icon-512.png?v=4",sizes:"512x512",type:"image/png"}]}):null}
 }
 function step(d){
   if(!queue.length)queue=view.map(x=>x.id);
@@ -542,7 +543,7 @@ au.onerror=async()=>{
   if(!healed.has(s.id)&&navigator.onLine){healed.add(s.id);toast("Memperbaiki lagu…",8000);try{await iDel(key(s.id));cached.delete(s.id);await play(s);return}catch(x){}}
   toast("Lagu tidak bisa diputar. Hapus lalu impor ulang.",6000);
 };
-au.onplay=()=>{$("#pl").classList.add("playing");$("#edge").classList.add("playing");$("#pi").innerHTML='<svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';if("mediaSession"in navigator)navigator.mediaSession.playbackState="playing"};
+au.onplay=()=>{bindMS();$("#pl").classList.add("playing");$("#edge").classList.add("playing");$("#pi").innerHTML='<svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';if("mediaSession"in navigator)navigator.mediaSession.playbackState="playing"};
 au.onpause=()=>{$("#pl").classList.remove("playing");$("#edge").classList.remove("playing");$("#pi").innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';if("mediaSession"in navigator)navigator.mediaSession.playbackState="paused"};
 au.onloadedmetadata=()=>{$("#sk").max=Math.floor(au.duration)||0;$("#du").textContent=fmt(au.duration)};
 let lp=0;au.ontimeupdate=()=>{
@@ -585,14 +586,16 @@ ed.addEventListener("pointercancel",()=>{ex=null});
 ed.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openFull()}});
 
 /* ---------- kontrol layar kunci / notifikasi (jalan di background) ---------- */
-if("mediaSession"in navigator){
+function bindMS(){
+  if(!("mediaSession"in navigator))return;
   const m=navigator.mediaSession,h=(a,f)=>{try{m.setActionHandler(a,f)}catch(x){}};
   h("play",()=>au.play());h("pause",()=>au.pause());
   h("previoustrack",()=>$("#pv").click());h("nexttrack",()=>step(1,true));
-  /* seekbackward/seekforward sengaja tidak dipasang: iOS akan menampilkan tombol 10 detik menggantikan tombol lagu sebelumnya/berikutnya */
+  /* seek 10 detik dimatikan: kalau terpasang, iOS menampilkan tombol 10 detik menggantikan tombol lagu sebelumnya/berikutnya */
   h("seekbackward",null);h("seekforward",null);
   h("seekto",d=>{au.currentTime=d.seekTime});
 }
+bindMS();
 </script>
 </body>
 </html>
