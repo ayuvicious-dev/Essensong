@@ -114,6 +114,7 @@ input[type=range]{flex:1;accent-color:var(--vio)}
 #pl .cl{color:var(--ink)}
 #pl.full{position:fixed;inset:0;z-index:7;border:0;border-radius:0;box-shadow:none;background:var(--mist);padding:calc(env(safe-area-inset-top,0px) + 56px) 28px calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;flex-direction:column;justify-content:center;gap:6px;touch-action:auto}
 #pl.full .art{display:block;width:min(72vw,300px);aspect-ratio:1;object-fit:contain;margin:0 auto 22px;filter:drop-shadow(0 14px 28px rgba(127,95,208,.35))}
+#pl.full .art.cover{object-fit:cover;border-radius:18px}
 #pl.full .cl{display:grid;position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:14px}
 #pl.full .n{font-size:1.4rem;white-space:normal}
 #pl.full .ar{font-size:1rem;margin-bottom:14px}
@@ -239,7 +240,7 @@ onAuthStateChanged(auth,async u=>{
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(x){}
   await loadCached();render();
   const u1=onSnapshot(query(collection(db,"users",uid,"songs"),orderBy("createdAt","desc")),s=>{songs=s.docs.map(d=>({id:d.id,...d.data()}));ready=true;lerr="";render()},e=>{ready=true;lerr=e.code;render()});
-  const u2=onSnapshot(collection(db,"users",uid,"playlists"),s=>{pls=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));render()},()=>{});unsub=()=>{u1();u2()};
+  const u2=onSnapshot(collection(db,"users",uid,"playlists"),s=>{pls=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));render();if(cur)info()},()=>{});unsub=()=>{u1();u2()};
 });
 
 /* ---------- daftar lagu ---------- */
@@ -307,7 +308,7 @@ $("#list").onclick=e=>{
     if(a==="delpl"){const p=pls.find(x=>x.id===row.dataset.pl);if(p)openDelPl(p);return}
   }
   const s=row&&songs.find(x=>x.id===row.dataset.id);if(!s)return;
-  if(a==="play"){queue=view.map(x=>x.id);play(s)}
+  if(a==="play"){curPl=tab==="pl"&&plOpen?plOpen:null;queue=view.map(x=>x.id);play(s)}
   else if(a==="like")setDoc(doc(db,"users",uid,"songs",s.id),{liked:!s.liked},{merge:true});
   else if(a==="off")toggleOffline(s);
   else if(a==="more")openSheet(s);
@@ -467,7 +468,7 @@ function openSettings(){
     <div class="ab"><span>Aplikasi</span><b>Essensong</b></div>
     <div class="ab"><span>Tanggal rilis</span><b>24 Oktober 2026</b></div>
     <div class="ab"><span>Sudah berjalan</span><b id="abd"></b></div></div>
-  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div><div style="text-align:center;font-size:11px;opacity:.5;padding:6px 0">Versi 11</div>
+  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div><div style="text-align:center;font-size:11px;opacity:.5;padding:6px 0">Versi 12</div>
   <button data-s="cancel" style="text-align:center">Tutup</button>`;
   $("#abd").textContent=runTxt();setUI();
   clearInterval(sleepTick);sleepTick=setInterval(()=>{const e=$("#slt");if(!e)return clearInterval(sleepTick);e.textContent=sleepTxt()},1000);
@@ -578,11 +579,18 @@ async function play(s){
   setDoc(doc(db,"users",uid,"songs",s.id),{plays:(s.plays||0)+1,lastPlayed:Date.now()},{merge:true}).catch(()=>{});
   try{await au.play()}catch(x){if(x.name==="NotAllowedError")toast("Ketuk tombol putar untuk memulai.");else if(x.name!=="AbortError")toast("Gagal memutar ("+x.name+"). Ukuran "+(b.size/1048576).toFixed(1)+" MB, awal file: "+await head(b),9000)}
 }
+let curPl=null;
+function coverOf(){
+  let p=pls.find(x=>x.id===curPl);
+  if(!(p&&p.cover)&&cur)p=pls.find(x=>x.cover&&(x.songIds||[]).includes(cur.id));
+  return p&&p.cover?p.cover:""}
 function info(){
   bindMS();
+  {const a=document.querySelector("#pl .art"),c=cur?coverOf():"";
+   if(a){if(c){if(a.getAttribute("src")!==c)a.src=c;a.classList.add("cover")}else{a.classList.remove("cover");if(a.getAttribute("src")!=="icons/logo.png")a.src="icons/logo.png"}}}
   $("#tn").textContent=cur?cur.title:"Belum ada lagu diputar";$("#ta").textContent=cur?cur.artist:"";
   if("mediaSession"in navigator){
-    navigator.mediaSession.metadata=cur?new MediaMetadata({title:cur.title,artist:cur.artist||"Essensong",album:"Essensong",artwork:[{src:"icons/icon-192.png?v=4",sizes:"192x192",type:"image/png"},{src:"icons/icon-512.png?v=4",sizes:"512x512",type:"image/png"}]}):null}
+    navigator.mediaSession.metadata=cur?new MediaMetadata({title:cur.title,artist:cur.artist||"Essensong",album:"Essensong",artwork:coverOf()?[{src:coverOf(),sizes:"480x480",type:"image/jpeg"}]:[{src:"icons/icon-192.png?v=4",sizes:"192x192",type:"image/png"},{src:"icons/icon-512.png?v=4",sizes:"512x512",type:"image/png"}]}):null}
 }
 function step(d){
   if(!queue.length)queue=view.map(x=>x.id);
