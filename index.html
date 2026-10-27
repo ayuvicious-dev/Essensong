@@ -468,7 +468,7 @@ function openSettings(){
     <div class="ab"><span>Aplikasi</span><b>Essensong</b></div>
     <div class="ab"><span>Tanggal rilis</span><b>24 Oktober 2026</b></div>
     <div class="ab"><span>Sudah berjalan</span><b id="abd"></b></div></div>
-  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div><div style="text-align:center;font-size:11px;opacity:.5;padding:6px 0">Versi 12</div>
+  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div><div style="text-align:center;font-size:11px;opacity:.5;padding:6px 0">Versi 13</div>
   <button data-s="cancel" style="text-align:center">Tutup</button>`;
   $("#abd").textContent=runTxt();setUI();
   clearInterval(sleepTick);sleepTick=setInterval(()=>{const e=$("#slt");if(!e)return clearInterval(sleepTick);e.textContent=sleepTxt()},1000);
@@ -490,6 +490,7 @@ $("#file").onchange=async e=>{
       if(!d0){toast("“"+f.name+"” bukan mp3 yang bisa diputar, dilewati.",5000);continue}
       let up=await strip(f),d1=up===f?d0:await dur(up);
       if(up!==f&&(!d1||Math.abs(d1-d0)>2)){up=f;d1=d0}
+      {const md=await mp3dur(up);if(md)d1=md}
       saved+=f.size-up.size;
       const nc=Math.ceil(up.size/CH);
       for(let i=0;i<nc;i++){
@@ -535,6 +536,22 @@ async function id3(f){const r={};try{
     if(id==="TIT2"||id==="TPE1"){const e=b[p+10];r[id==="TIT2"?"title":"artist"]=new TextDecoder(e===1?"utf-16":e===2?"utf-16be":e===3?"utf-8":"iso-8859-1").decode(b.slice(p+11,p+10+sz)).replace(/\0/g,"").trim()}
     p+=10+sz}
 }catch(x){}return r}
+/* Durasi akurat: hitung frame mp3 satu per satu (estimasi browser bisa meleset, mis. VBR tanpa header atau MPEG-2). */
+async function mp3dur(b){try{
+  const u=new Uint8Array(await b.arrayBuffer()),n=u.length;let p=0;
+  while(p+10<=n&&u[p]===73&&u[p+1]===68&&u[p+2]===51)p+=10+((u[p+6]&127)<<21|(u[p+7]&127)<<14|(u[p+8]&127)<<7|(u[p+9]&127))+(u[p+5]&16?10:0);
+  const B1=[0,32,40,48,56,64,80,96,112,128,160,192,224,256,320],B2=[0,8,16,24,32,40,48,56,64,80,96,112,128,144,160],SR={3:[44100,48000,32000],2:[22050,24000,16000],0:[11025,12000,8000]};
+  let t=0,fr=0;
+  while(p+4<=n){
+    if(u[p]!==255||(u[p+1]&224)!==224){p++;continue}
+    const v=(u[p+1]>>3)&3,l=(u[p+1]>>1)&3,bi=u[p+2]>>4,si=(u[p+2]>>2)&3,pd=(u[p+2]>>1)&1;
+    if(v===1||l!==1||bi===0||bi===15||si===3){p++;continue}
+    const sr=SR[v][si],v1=v===3,br=(v1?B1:B2)[bi]*1000,len=Math.floor((v1?144:72)*br/sr)+pd;
+    if(p+len+2<=n&&!(u[p+len]===255&&(u[p+len+1]&224)===224)){p++;continue}
+    t+=(v1?1152:576)/sr;fr++;p+=len;
+  }
+  return fr>20?t:0;
+}catch(x){return 0}}
 const dur=f=>new Promise(r=>{const a=new Audio(),u=URL.createObjectURL(f);a.preload="metadata";a.onloadedmetadata=()=>{r(a.duration||0);URL.revokeObjectURL(u)};a.onerror=()=>{r(0);URL.revokeObjectURL(u)};a.src=u});
 
 /* ---------- offline & hapus ---------- */
@@ -564,7 +581,9 @@ async function remove(s){
 }
 
 /* ---------- pemutar ---------- */
-const healed=new Set();let playTok=0;
+const healed=new Set();let playTok=0,realDur=0;
+const durNow=()=>realDur||au.duration||0;
+function applyDur(){const D=durNow();$("#sk").max=Math.floor(D)||0;$("#du").textContent=fmt(D)}
 async function play(s){
   if(!s)return;const tok=++playTok;
   let src,b;
@@ -575,7 +594,8 @@ async function play(s){
     b=new Blob([b],{type:await sniff(b)});
     if(objUrl)URL.revokeObjectURL(objUrl);src=objUrl=URL.createObjectURL(b);$("#toast").classList.add("hide");
   }catch(x){return toast("Gagal memuat lagu: "+(x.code||x.message))}
-  cur=s;au.src=src;info();render();
+  cur=s;realDur=0;au.src=src;info();render();
+  mp3dur(b).then(d=>{if(tok!==playTok||!d)return;realDur=d;applyDur();if(Math.abs(d-(s.duration||0))>2)updateDoc(doc(db,"users",uid,"songs",s.id),{duration:d}).catch(()=>{})});
   setDoc(doc(db,"users",uid,"songs",s.id),{plays:(s.plays||0)+1,lastPlayed:Date.now()},{merge:true}).catch(()=>{});
   try{await au.play()}catch(x){if(x.name==="NotAllowedError")toast("Ketuk tombol putar untuk memulai.");else if(x.name!=="AbortError")toast("Gagal memutar ("+x.name+"). Ukuran "+(b.size/1048576).toFixed(1)+" MB, awal file: "+await head(b),9000)}
 }
@@ -613,11 +633,11 @@ au.onerror=async()=>{
 };
 au.onplay=()=>{bindMS();$("#pl").classList.add("playing");$("#edge").classList.add("playing");$("#pi").innerHTML='<svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';if("mediaSession"in navigator)navigator.mediaSession.playbackState="playing"};
 au.onpause=()=>{$("#pl").classList.remove("playing");$("#edge").classList.remove("playing");$("#pi").innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';if("mediaSession"in navigator)navigator.mediaSession.playbackState="paused"};
-au.onloadedmetadata=()=>{$("#sk").max=Math.floor(au.duration)||0;$("#du").textContent=fmt(au.duration)};
+au.onloadedmetadata=applyDur;
 let lp=0;au.ontimeupdate=()=>{
   if(sleepEnd&&Date.now()>=sleepEnd)sleepFire();
   $("#sk").value=Math.floor(au.currentTime);$("#cu").textContent=fmt(au.currentTime);
-  if("mediaSession"in navigator&&navigator.mediaSession.setPositionState&&au.duration&&Date.now()-lp>1000){lp=Date.now();try{navigator.mediaSession.setPositionState({duration:au.duration,position:au.currentTime,playbackRate:1})}catch(x){}}
+  if("mediaSession"in navigator&&navigator.mediaSession.setPositionState&&durNow()&&Date.now()-lp>1000){lp=Date.now();try{const D=durNow();navigator.mediaSession.setPositionState({duration:D,position:Math.min(au.currentTime,D),playbackRate:1})}catch(x){}}
 };
 
 /* ---------- panel pemutar: geser ke tepi, atau layar penuh ---------- */
