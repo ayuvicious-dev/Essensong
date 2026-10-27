@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Essensong</title>
-<script>try{var t=localStorage.getItem("essensong-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<script>try{var t=localStorage.getItem("essensong-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);else if(t!=="auto")document.documentElement.setAttribute("data-theme","light")}catch(e){document.documentElement.setAttribute("data-theme","light")}</script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#9b7fe0">
 <meta name="mobile-web-app-capable" content="yes">
@@ -235,7 +235,7 @@ $("#brs").onclick=()=>run(async()=>{const e=$("#em").value.trim();if(!e)return e
 
 onAuthStateChanged(auth,async u=>{
   if(unsub){unsub();unsub=null}
-  if(!u){dl.stop=true;$("#sheet").classList.add("hide");uid=null;au.pause();au.removeAttribute("src");cur=null;songs=[];setPS("panel");$("#auth").classList.remove("hide");$("#app").classList.add("hide");return}
+  if(!u){dl.stop=true;$("#sheet").classList.add("hide");uid=null;au.pause();au.removeAttribute("src");cur=null;songs=[];setPS("col");$("#auth").classList.remove("hide");$("#app").classList.add("hide");return}
   uid=u.uid;ready=false;lerr="";tab="home";plOpen=null;pls=[];$("#auth").classList.add("hide");$("#app").classList.remove("hide");
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(x){}
   await loadCached();render();
@@ -392,9 +392,9 @@ $("#home").onclick=()=>{tab="home";plOpen=null;$("#q").value="";render();$("#lis
 $("#nav").onclick=e=>{const b=e.target.closest("button[data-t]");if(!b)return;tab=tab===b.dataset.t?"home":b.dataset.t;plOpen=null;render()};
 
 /* ---------- pengaturan ---------- */
-const getTheme=()=>{try{const t=localStorage.getItem("essensong-theme");return t==="dark"||t==="light"?t:"auto"}catch(x){return"auto"}};
+const getTheme=()=>{try{const t=localStorage.getItem("essensong-theme");return t==="dark"||t==="light"||t==="auto"?t:"light"}catch(x){return"light"}};
 function setTheme(v){
-  try{v==="auto"?localStorage.removeItem("essensong-theme"):localStorage.setItem("essensong-theme",v)}catch(x){}
+  try{localStorage.setItem("essensong-theme",v)}catch(x){}
   v==="auto"?document.documentElement.removeAttribute("data-theme"):document.documentElement.setAttribute("data-theme",v);
   document.querySelectorAll("#shp .seg button").forEach(x=>x.classList.toggle("on",x.dataset.v===v));
 }
@@ -468,7 +468,7 @@ function openSettings(){
     <div class="ab"><span>Aplikasi</span><b>Essensong</b></div>
     <div class="ab"><span>Tanggal rilis</span><b>24 Oktober 2026</b></div>
     <div class="ab"><span>Sudah berjalan</span><b id="abd"></b></div></div>
-  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div><div style="text-align:center;font-size:11px;opacity:.5;padding:6px 0">Versi 15${cur&&lastMi?`<br>Durasi lagu ini: hitung frame ${fmt(lastMi.t)} · header ${lastMi.xf?fmt(lastMi.xf*(lastMi.sr<32000?576:1152)/lastMi.sr):"-"} · browser ${fmt(au.duration)} · ${lastMi.sr} Hz`:""}</div>
+  <div class="sx"><button class="lo bad" data-s="lo"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Keluar</button></div><div style="text-align:center;font-size:11px;opacity:.5;padding:6px 0">Versi 17${cur&&lastMi?`<br>Durasi lagu ini: hitung frame ${fmt(lastMi.t)} · header ${lastMi.xf?fmt(lastMi.xf*(lastMi.sr<32000?576:1152)/lastMi.sr):"-"} · browser ${fmt(au.duration)} · ${lastMi.sr} Hz`:""}</div>
   <button data-s="cancel" style="text-align:center">Tutup</button>`;
   $("#abd").textContent=runTxt();setUI();
   clearInterval(sleepTick);sleepTick=setInterval(()=>{const e=$("#slt");if(!e)return clearInterval(sleepTick);e.textContent=sleepTxt()},1000);
@@ -704,7 +704,7 @@ let lp=0;au.ontimeupdate=()=>{
 };
 
 /* ---------- panel pemutar: geser ke tepi, atau layar penuh ---------- */
-const pl=$("#pl"),ed=$("#edge");let ps="panel",prevPS="panel",gt;
+const pl=$("#pl"),ed=$("#edge");let ps="col",prevPS="col",gt;
 function setPS(x){
   ps=x;pl.classList.toggle("full",x==="full");
   if(x==="col"){pl.classList.add("col");clearTimeout(gt);gt=setTimeout(()=>{if(ps==="col")pl.classList.add("gone")},240)}
@@ -712,6 +712,7 @@ function setPS(x){
   ed.classList.toggle("hide",x!=="col");
 }
 const openFull=()=>{if(ps!=="full"){prevPS=ps;setPS("full")}};
+setPS("col");
 $("#cl").onclick=()=>setPS(prevPS==="full"?"panel":prevPS);
 let dx0=null,dy0=0,drag=false,sup=false;
 pl.addEventListener("pointerdown",e=>{if(ps!=="panel"||e.target.closest("input[type=range]"))return;dx0=e.clientX;dy0=e.clientY;drag=false});
